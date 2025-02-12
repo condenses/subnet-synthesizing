@@ -1,0 +1,14 @@
+[project]
+name = "subnet-synthesizing"
+version = "0.0.1"
+description = ""
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "datasets>=3.2.0",
+    "fastapi>=0.115.8",
+    "tiktoken>=0.8.0",
+    "uvicorn>=0.34.0",
+]
+[tool.setuptools.packages.find]
+where = ["."]
