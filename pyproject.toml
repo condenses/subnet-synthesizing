@@ -1,14 +1,35 @@
+[tool.hatch.build.targets.wheel]
+packages = ["condenses_synthesizing"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "subnet-synthesizing"
-version = "0.0.1"
-description = ""
+version = "0.1.0"
+description = "Synthesizing Subnet Nodes (Miners)"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "Your Name", email = "your.email@example.com" }
+]
 dependencies = [
+    "fastapi",
+    "httpx>=0.28.1",
+    "loguru>=0.7.3",
+    "numpy",
+    "pydantic-settings>=2.7.1",
+    "pymongo>=4.11.1",
+    "redis>=5.2.1",
+    "uvicorn>=0.34.0",
     "datasets>=3.2.0",
     "fastapi>=0.115.8",
     "tiktoken>=0.8.0",
     "uvicorn>=0.34.0",
 ]
-[tool.setuptools.packages.find]
-where = ["."]
+
+
+[project.scripts]
+condenses-synthesizing-start-server = "condenses_synthesizing.server:start_server"
