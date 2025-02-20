@@ -10,14 +10,18 @@ class SynthesizingResponse:
 
 class SynthesizingClient:
     """Synchronous client for the synthesizing server"""
-    
-    def __init__(self, base_url: str = "http://localhost:9104"):
-        self.base_url = base_url.rstrip("/")
-        self.client = httpx.Client()
 
-    def get_message(self) -> SynthesizingResponse:
-        """Get a synthesized message from the server"""
-        response = self.client.get(f"{self.base_url}/api/synthesizing")
+    def __init__(self, base_url: str = "http://localhost:9104", timeout: float = 10.0):
+        self.base_url = base_url.rstrip("/")
+        self.client = httpx.Client(timeout=timeout)
+
+    def get_message(self, timeout: Optional[float] = None) -> SynthesizingResponse:
+        """Get a synthesized message from the server
+
+        Args:
+            timeout: Optional timeout in seconds. Overrides the client default if provided.
+        """
+        response = self.client.get(f"{self.base_url}/api/synthesizing", timeout=timeout)
         response.raise_for_status()
         data = response.json()
         return SynthesizingResponse(**data)
@@ -35,13 +39,14 @@ class SynthesizingClient:
 
 class AsyncSynthesizingClient:
     """Asynchronous client for the synthesizing server"""
-    
-    def __init__(self, base_url: str = "http://localhost:9104"):
+
+    def __init__(self, base_url: str = "http://localhost:9104", timeout: float = 10.0):
         self.base_url = base_url.rstrip("/")
         self.client: Optional[httpx.AsyncClient] = None
+        self.timeout = timeout
 
     async def __aenter__(self):
-        self.client = httpx.AsyncClient()
+        self.client = httpx.AsyncClient(timeout=self.timeout)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -52,12 +57,20 @@ class AsyncSynthesizingClient:
         if self.client:
             await self.client.aclose()
 
-    async def get_message(self) -> SynthesizingResponse:
-        """Get a synthesized message from the server"""
+    async def get_message(
+        self, timeout: Optional[float] = None
+    ) -> SynthesizingResponse:
+        """Get a synthesized message from the server
+
+        Args:
+            timeout: Optional timeout in seconds. Overrides the client default if provided.
+        """
         if not self.client:
-            self.client = httpx.AsyncClient()
-        
-        response = await self.client.get(f"{self.base_url}/api/synthesizing")
+            self.client = httpx.AsyncClient(timeout=self.timeout)
+
+        response = await self.client.get(
+            f"{self.base_url}/api/synthesizing", timeout=timeout
+        )
         response.raise_for_status()
         data = response.json()
         return SynthesizingResponse(**data)
