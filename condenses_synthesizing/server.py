@@ -30,12 +30,11 @@ class App:
             streaming=True,
         )
         instruct_dataset = instruct_dataset.map(
-            lambda x: {"text": x["conversations"][0]["value"]}, num_proc=NUM_PROC
+            lambda x: {"text": x["conversations"][0]["value"]}
         )
         instruct_dataset = instruct_dataset.filter(
             lambda x: len(x["text"]) // 4 > CONFIG.synthesizing.min_tokens
             and len(x["text"]) // 4 < CONFIG.synthesizing.max_tokens,
-            num_proc=NUM_PROC,
         )
         return instruct_dataset
 
