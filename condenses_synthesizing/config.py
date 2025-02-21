@@ -18,6 +18,6 @@ class Config(BaseSettings):
     class Config:
         env_file = ".env"
         env_nested_delimiter = "__"
-
+        extra = "ignore"
 
 CONFIG = Config()
