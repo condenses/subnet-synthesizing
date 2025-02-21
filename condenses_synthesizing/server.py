@@ -24,7 +24,11 @@ class App:
 
     def _load_dataset(self):
         instruct_dataset = load_dataset(
-            "BAAI/Infinity-Instruct", "0625", split="train", num_proc=NUM_PROC
+            "BAAI/Infinity-Instruct",
+            "0625",
+            split="train",
+            num_proc=NUM_PROC,
+            streaming=True,
         )
         instruct_dataset = instruct_dataset.map(
             lambda x: {"text": x["conversations"][0]["value"]}, num_proc=NUM_PROC
@@ -34,7 +38,7 @@ class App:
             and len(x["text"]) // 4 < CONFIG.synthesizing.max_tokens,
             num_proc=NUM_PROC,
         )
-        return iter(instruct_dataset)
+        return instruct_dataset
 
     def api_synthesizing(self) -> SynthesizingResponse:
         text = next(self.dataset)["text"]
