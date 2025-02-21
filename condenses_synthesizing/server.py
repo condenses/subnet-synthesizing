@@ -27,7 +27,6 @@ class App:
             "BAAI/Infinity-Instruct",
             "0625",
             split="train",
-            num_proc=NUM_PROC,
             streaming=True,
         )
         instruct_dataset = instruct_dataset.map(
