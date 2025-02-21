@@ -12,12 +12,12 @@ class ServerConfig(BaseSettings):
 
 
 class Config(BaseSettings):
-    synthesizing: SynthesizingConfig = SynthesizingConfig()
-    server: ServerConfig = ServerConfig()
+    synthesizing: SynthesizingConfig = SynthesizingConfig(extra="ignore")
+    server: ServerConfig = ServerConfig(extra="ignore")
 
     class Config:
-        env_file = ".env"
+        env_file = ".synthesizing.env"
         env_nested_delimiter = "__"
-        extra = "allow"
+        extra = "ignore"
 
 CONFIG = Config()
