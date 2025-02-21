@@ -5,44 +5,29 @@ import uvicorn
 from .config import CONFIG
 
 NUM_PROC = 16
-
+app = FastAPI()
 
 class SynthesizingResponse(BaseModel):
     user_message: str
 
+# Load dataset once at module level
+instruct_dataset = load_dataset(
+    "BAAI/Infinity-Instruct",
+    "0625",
+    split="train",
+    streaming=True,
+)
+instruct_dataset = instruct_dataset.map(
+    lambda x: {"text": x["conversations"][0]["value"]}
+)
+instruct_dataset = instruct_dataset.filter(
+    lambda x: len(x["text"]) // 4 > CONFIG.synthesizing.min_tokens
+    and len(x["text"]) // 4 < CONFIG.synthesizing.max_tokens,
+)
 
-class App:
-    def __init__(self):
-        self.app = FastAPI()
-        self.dataset = self._load_dataset()
-        self.app.add_api_route(
-            "/api/synthesizing",
-            self.api_synthesizing,
-            methods=["GET"],
-            response_model=SynthesizingResponse,
-        )
-
-    def _load_dataset(self):
-        instruct_dataset = load_dataset(
-            "BAAI/Infinity-Instruct",
-            "0625",
-            split="train",
-            streaming=True,
-        )
-        instruct_dataset = instruct_dataset.map(
-            lambda x: {"text": x["conversations"][0]["value"]}
-        )
-        instruct_dataset = instruct_dataset.filter(
-            lambda x: len(x["text"]) // 4 > CONFIG.synthesizing.min_tokens
-            and len(x["text"]) // 4 < CONFIG.synthesizing.max_tokens,
-        )
-        return instruct_dataset
-
-    def api_synthesizing(self) -> SynthesizingResponse:
-        text = next(self.dataset)["text"]
-        return SynthesizingResponse(
-            user_message=text,
-        )
-
-
-app = App()
+@app.get("/api/synthesizing", response_model=SynthesizingResponse)
+def api_synthesizing() -> SynthesizingResponse:
+    text = next(instruct_dataset)["text"]
+    return SynthesizingResponse(
+        user_message=text,
+    )
