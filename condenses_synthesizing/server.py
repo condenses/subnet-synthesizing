@@ -43,10 +43,4 @@ class App:
         )
 
 
-def start_server():
-    app = App()
-    uvicorn.run(app.app, host=CONFIG.server.host, port=CONFIG.server.port)
-
-
-if __name__ == "__main__":
-    start_server()
+app = App()
