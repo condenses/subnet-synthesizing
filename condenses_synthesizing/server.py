@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 import uvicorn
 from .config import CONFIG
 
@@ -12,27 +12,50 @@ class SynthesizingResponse(BaseModel):
     user_message: str
 
 
-# Load dataset once at module level
-instruct_dataset = load_dataset(
-    "BAAI/Infinity-Instruct",
-    "0625",
-    split="train",
-    streaming=True,
-)
-instruct_dataset = instruct_dataset.map(
-    lambda x: {"text": x["conversations"][0]["value"]}
-)
-instruct_dataset = instruct_dataset.filter(
-    lambda x: len(x["text"]) // 4 > CONFIG.synthesizing.min_tokens
-    and len(x["text"]) // 4 < CONFIG.synthesizing.max_tokens,
-)
+class InfinityDataset:
+    def __init__(self, config):
+        self.config = config
+        self.dataset = None
+        self.iterator = None
+        self._load_dataset()
 
-instruct_dataset = iter(instruct_dataset)
+    def _load_dataset(self):
+        # Load and preprocess the dataset
+        dataset = load_dataset(
+            "BAAI/Infinity-Instruct",
+            "0625",
+            split="train",
+            streaming=True,
+        )
+        dataset = dataset.map(lambda x: {"text": x["conversations"][0]["value"]})
+        dataset = dataset.filter(
+            lambda x: len(x["text"]) // 4 > self.config.synthesizing.min_tokens
+            and len(x["text"]) // 4 < self.config.synthesizing.max_tokens,
+        )
+
+        self.dataset = dataset
+        self.iterator = iter(self.dataset)
+
+    def next(self):
+        try:
+            return next(self.iterator)
+        except StopIteration:
+            # Reset the iterator when it's exhausted
+            self._load_dataset()
+            return next(self.iterator)
+
+    def reset(self):
+        """Explicitly reset the iterator"""
+        self._load_dataset()
+
+
+# Initialize the dataset
+infinity_dataset = InfinityDataset(CONFIG)
 
 
 @app.get("/api/synthesizing", response_model=SynthesizingResponse)
 def api_synthesizing() -> SynthesizingResponse:
-    text = next(instruct_dataset)["text"]
+    text = infinity_dataset.next()["text"]
     return SynthesizingResponse(
         user_message=text,
     )
